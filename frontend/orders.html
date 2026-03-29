@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Orders — PageTurn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1207; --paper: #f7f3ec; --cream: #ede8df;
+      --amber: #c8832a; --amber-light: #f0d5a8; --amber-dark: #9b6118;
+      --muted: #7a6e60; --border: #d4cdc2; --white: #ffffff;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+    nav {
+      background: var(--ink); padding: 0 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--amber-light); }
+    .logo span { color: var(--amber); }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a {
+      color: #c4bfb8; text-decoration: none; font-size: 13px;
+      font-weight: 500; padding: 6px 14px; border-radius: 6px; transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: rgba(200,131,42,0.15); color: var(--amber-light); }
+
+    .page-wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    .page-header { margin-bottom: 32px; animation: fadeUp .5s ease both; }
+    .page-header h1 { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; }
+    .page-header p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+    /* PLACE ORDER CARD */
+    .order-form-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px; margin-bottom: 32px;
+      animation: fadeUp .5s .1s ease both;
+    }
+    .order-form-card h2 {
+      font-family: 'Playfair Display', serif; font-size: 18px;
+      margin-bottom: 16px; font-weight: 600;
+    }
+    .order-form-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
+    label { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+    input[type="text"], input[type="number"], select {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      color: var(--ink); background: var(--paper); outline: none; transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: var(--amber); background: var(--white); }
+    input::placeholder { color: #bab4ac; }
+
+    .btn {
+      padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; transition: all .2s; white-space: nowrap;
+    }
+    .btn-primary { background: var(--amber); color: var(--white); }
+    .btn-primary:hover:not(:disabled) { background: var(--amber-dark); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+
+    .order-msg { font-size: 12px; margin-top: 10px; display: none; }
+    .order-msg.success { color: #1b6b3a; display: block; }
+    .order-msg.error { color: #c0392b; display: block; }
+
+    /* ORDERS LIST */
+    .orders-section h2 {
+      font-family: 'Playfair Display', serif; font-size: 22px;
+      margin-bottom: 18px; animation: fadeUp .5s .2s ease both;
+    }
+
+    .order-item {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 22px; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      animation: fadeUp .4s ease both;
+    }
+    .order-left { display: flex; align-items: center; gap: 16px; }
+    .order-id {
+      width: 40px; height: 40px; border-radius: 8px;
+      background: var(--amber-light); color: var(--amber-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 500; flex-shrink: 0;
+    }
+    .order-book-id { font-size: 14px; font-weight: 500; }
+    .order-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .order-qty {
+      font-size: 13px; font-weight: 500; color: var(--amber-dark);
+      background: var(--amber-light); padding: 4px 12px; border-radius: 20px;
+    }
+
+    .state-box { text-align: center; padding: 56px 24px; color: var(--muted); }
+    .state-box .icon { font-size: 44px; margin-bottom: 14px; opacity: .4; }
+    .state-box h3 { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 6px; }
+    .state-box p { font-size: 13px; }
+
+    .loader { display: flex; gap: 6px; justify-content: center; padding: 40px; }
+    .loader span { width: 8px; height: 8px; background: var(--amber); border-radius: 50%; animation: bounce .8s ease infinite; }
+    .loader span:nth-child(2) { animation-delay: .15s; }
+    .loader span:nth-child(3) { animation-delay: .3s; }
+
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-10px)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Page<span>Turn</span></div>
+  <div class="nav-links">
+    <a href="index.html">Browse</a>
+    <a href="add-book.html">Add Book</a>
+    <a href="orders.html" class="active">Orders</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>Orders</h1>
+    <p>Place new orders and view order history</p>
+  </div>
+
+  <!-- PLACE ORDER -->
+  <div class="order-form-card">
+    <h2>Place an order</h2>
+    <div class="order-form-row">
+      <div>
+        <label>Book ID</label>
+        <input type="number" id="bookId" placeholder="e.g. 1" min="1"/>
+      </div>
+      <div>
+        <label>Quantity</label>
+        <input type="number" id="quantity" placeholder="e.g. 2" min="1" value="1"/>
+      </div>
+      <button class="btn btn-primary" id="orderBtn" onclick="placeOrder()">Place Order</button>
+    </div>
+    <div class="order-msg" id="orderMsg"></div>
+  </div>
+
+  <!-- ORDER LIST -->
+  <div class="orders-section">
+    <h2>Order history</h2>
+    <div id="orderContainer">
+      <div class="loader"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const BOOKS_API  = 'http://localhost:8080/api/books';
+  const ORDERS_API = 'http://localhost:8081/api/orders';
+
+  async function loadOrders() {
+    try {
+      const res = await fetch(ORDERS_API);
+      if (!res.ok) throw new Error();
+      const orders = await res.json();
+      renderOrders(orders);
+    } catch(e) {
+      document.getElementById('orderContainer').innerHTML = `
+        <div class="state-box">
+          <div class="icon">📋</div>
+          <h3>No orders yet</h3>
+          <p>Place your first order above, or check if the order service is running on port 8081.</p>
+        </div>`;
+    }
+  }
+
+  function renderOrders(orders) {
+    const c = document.getElementById('orderContainer');
+    if (!orders.length) {
+      c.innerHTML = `<div class="state-box"><div class="icon">📋</div><h3>No orders yet</h3><p>Place your first order above.</p></div>`;
+      return;
+    }
+    c.innerHTML = orders.map((o, i) => `
+      <div class="order-item" style="animation-delay:${i * 0.06}s">
+        <div class="order-left">
+          <div class="order-id">#${o.id}</div>
+          <div>
+            <div class="order-book-id">Book ID: ${o.bookId}</div>
+            <div class="order-meta">Order placed successfully</div>
+          </div>
+        </div>
+        <div class="order-qty">Qty: ${o.quantity}</div>
+      </div>`).join('');
+  }
+
+  async function placeOrder() {
+    const bookId = document.getElementById('bookId').value;
+    const quantity = document.getElementById('quantity').value;
+    const msg = document.getElementById('orderMsg');
+    const btn = document.getElementById('orderBtn');
+
+    msg.className = 'order-msg';
+    msg.style.display = 'none';
+
+    if (!bookId || !quantity || bookId < 1 || quantity < 1) {
+      msg.textContent = 'Please enter a valid Book ID and quantity.';
+      msg.className = 'order-msg error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Placing...';
+
+    try {
+      const res = await fetch(ORDERS_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: parseInt(bookId), quantity: parseInt(quantity) })
+      });
+      if (!res.ok) throw new Error();
+      msg.textContent = '✓ Order placed successfully!';
+      msg.className = 'order-msg success';
+      document.getElementById('bookId').value = '';
+      document.getElementById('quantity').value = '1';
+      loadOrders();
+    } catch(e) {
+      msg.textContent = 'Could not place order. Make sure order-service is running on port 8081.';
+      msg.className = 'order-msg error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Place Order';
+    }
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>

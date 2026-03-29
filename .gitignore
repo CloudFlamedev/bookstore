@@ -1,0 +1,17 @@
+# Maven
+**/target/
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+
+# IDE
+**/.idea/
+**/*.iml
+**/.vscode/
+
+# Environment
+.env
+*.env
+
+# OS
+.DS_Store

@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: bookstore-db
+    environment:
+      POSTGRES_DB: bookstore
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - bookstore-net
+
+  book-service:
+    build:
+      context: ./book-service
+      dockerfile: Dockerfile
+    container_name: book-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bookstore
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      - postgres
+    networks:
+      - bookstore-net
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bookstore
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      - postgres
+    networks:
+      - bookstore-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - book-service
+      - order-service
+    networks:
+      - bookstore-net
+
+networks:
+  bookstore-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
