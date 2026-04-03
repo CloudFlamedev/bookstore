@@ -19,3 +19,5 @@ terraform/.terraform/
 terraform/.terraform.lock.hcl
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
+terraform/awscliv2.zip
+terraform/aws/
